@@ -3,13 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package chat;
+package chat.server;
 
+import chat.Message;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 
 /**
  *
@@ -24,7 +26,7 @@ public class Server extends javax.swing.JFrame implements Runnable {
     ObjectOutputStream oos;
     Message message;
     
-    private static final short PORT = 6969;
+    private static final short SERVER_PORT = 6969;
     
     public Server() {
         initComponents();
@@ -32,13 +34,11 @@ public class Server extends javax.swing.JFrame implements Runnable {
         thread = new Thread(this);
         thread.start();
     }
-    
-    public short getPort() {return this.PORT;}
 
     @Override
     public void run() {
         try {
-            serverSocket = new ServerSocket(PORT);
+            serverSocket = new ServerSocket(SERVER_PORT);
             while(true) {
                 inputSocket = serverSocket.accept();
                 ois = new ObjectInputStream(inputSocket.getInputStream());
@@ -51,8 +51,13 @@ public class Server extends javax.swing.JFrame implements Runnable {
             }
         } catch (IOException ex) {
             ex.printStackTrace();
+            messagesTextArea.append(ex.getMessage() + "\n");
         } catch (ClassNotFoundException ex) {
             ex.printStackTrace();
+            messagesTextArea.append(ex.getMessage() + "\n");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            messagesTextArea.append(ex.getMessage() + "\n");
         }
     }
     
@@ -103,6 +108,8 @@ public class Server extends javax.swing.JFrame implements Runnable {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextArea messagesTextArea;
     // End of variables declaration//GEN-END:variables
-
     
+    public static void main(String[] args) throws UnknownHostException {
+        new Server();
+    }
 }

@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package chat;
+package chat.client;
 
+import chat.Message;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -23,7 +24,7 @@ public class Client extends javax.swing.JFrame implements Runnable {
     
     private short destinationPort;
     private String nick, messageText, originIp, destinationIp;
-    private String SERVER_IP = "192.168.1.10";
+    private String serverIp = "192.168.1.10";
     private short CLIENT_PORT = 6968, SERVER_PORT = 6969;
     
     Thread thread;
@@ -47,26 +48,29 @@ public class Client extends javax.swing.JFrame implements Runnable {
 
     private void send() {
         if (messageTextFieldHasText()) {
+            serverIp = serverIpTextField.getText();
             messageText = messageTextField.getText();
             nick = nickTextField.getText();
-            destinationIp = ipTextField.getText();
+            destinationIp = destinationIpTextField.getText();
             destinationPort = Short.parseShort(portTextField.getText());
             
             messagesTextArea.append(nick + ": " + messageText + "\n"); 
             clearMessage();
-            inputMessage = new Message(messageText, originIp, destinationIp, nick, destinationPort);
+            outputMessage = new Message(messageText, originIp, destinationIp, nick, destinationPort);
             outputSocket = null;
             oos = null;
             try {
-                outputSocket = new Socket(SERVER_IP, SERVER_PORT);
+                outputSocket = new Socket(serverIp, SERVER_PORT);
                 oos = new ObjectOutputStream(outputSocket.getOutputStream());
-                oos.writeObject(inputMessage);
+                oos.writeObject(outputMessage);
                 oos.close();
-            } catch (UnknownHostException ex) {
-                ex.printStackTrace();
             } catch (IOException ex) {
                 ex.printStackTrace();
-            } 
+                messagesTextArea.append(ex.getMessage() + "\n");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                messagesTextArea.append(ex.getMessage() + "\n");
+            }
         }
     }
     
@@ -75,16 +79,21 @@ public class Client extends javax.swing.JFrame implements Runnable {
         try {
             serverSocket = new ServerSocket(CLIENT_PORT);
             while(true) {
-                outputSocket = serverSocket.accept();
-                ois = new ObjectInputStream(outputSocket.getInputStream());
-                outputMessage = (Message)ois.readObject();
-                messagesTextArea.append(outputMessage.getNick() + ": " + outputMessage.getText() + "\n");
+                inputSocket = serverSocket.accept();
+                ois = new ObjectInputStream(inputSocket.getInputStream());
+                inputMessage = (Message)ois.readObject();
+                messagesTextArea.append(inputMessage.getNick() + ": " + inputMessage.getText() + "\n");
                 
             }
         } catch (IOException ex) {
             ex.printStackTrace();
+            messagesTextArea.append(ex.getMessage() + "\n");
         } catch (ClassNotFoundException ex) {
             ex.printStackTrace();
+            messagesTextArea.append(ex.getMessage() + "\n");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            messagesTextArea.append(ex.getMessage() + "\n");
         }
         
     }
@@ -109,12 +118,14 @@ public class Client extends javax.swing.JFrame implements Runnable {
         messagesTextArea = new javax.swing.JTextArea();
         jLabel1 = new javax.swing.JLabel();
         nickTextField = new javax.swing.JTextField();
-        ipTextField = new javax.swing.JTextField();
+        destinationIpTextField = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
         portTextField = new javax.swing.JTextField();
         jLabel3 = new javax.swing.JLabel();
         buttonClearConversation = new javax.swing.JButton();
         buttonClearMessage = new javax.swing.JButton();
+        jLabel4 = new javax.swing.JLabel();
+        serverIpTextField = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Client - Chat");
@@ -136,14 +147,14 @@ public class Client extends javax.swing.JFrame implements Runnable {
 
         nickTextField.setText("Anonymous");
 
-        ipTextField.setText("localhost");
-        ipTextField.addActionListener(new java.awt.event.ActionListener() {
+        destinationIpTextField.setText("localhost");
+        destinationIpTextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                ipTextFieldActionPerformed(evt);
+                destinationIpTextFieldActionPerformed(evt);
             }
         });
 
-        jLabel2.setText("IP:");
+        jLabel2.setText("Destination IP:");
 
         portTextField.setText("6968");
 
@@ -163,6 +174,15 @@ public class Client extends javax.swing.JFrame implements Runnable {
             }
         });
 
+        jLabel4.setText("Server IP:");
+
+        serverIpTextField.setText("192.168.1.10");
+        serverIpTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                serverIpTextFieldActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -176,9 +196,13 @@ public class Client extends javax.swing.JFrame implements Runnable {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(nickTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel4)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(serverIpTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(ipTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(destinationIpTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel3)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -189,7 +213,7 @@ public class Client extends javax.swing.JFrame implements Runnable {
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(buttonClearMessage)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(messageTextField)
+                        .addComponent(messageTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 490, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(buttonSend)))
                 .addContainerGap())
@@ -202,10 +226,13 @@ public class Client extends javax.swing.JFrame implements Runnable {
                     .addComponent(jLabel1)
                     .addComponent(nickTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel2)
-                    .addComponent(ipTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(destinationIpTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel3)
                     .addComponent(portTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(buttonClearConversation))
+                    .addComponent(buttonClearConversation)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel4)
+                        .addComponent(serverIpTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 247, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -223,9 +250,9 @@ public class Client extends javax.swing.JFrame implements Runnable {
         send();
     }//GEN-LAST:event_buttonSendActionPerformed
 
-    private void ipTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ipTextFieldActionPerformed
+    private void destinationIpTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_destinationIpTextFieldActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_ipTextFieldActionPerformed
+    }//GEN-LAST:event_destinationIpTextFieldActionPerformed
 
     private void buttonClearConversationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonClearConversationActionPerformed
         clearConversation();
@@ -235,6 +262,10 @@ public class Client extends javax.swing.JFrame implements Runnable {
         clearMessage();
     }//GEN-LAST:event_buttonClearMessageActionPerformed
 
+    private void serverIpTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_serverIpTextFieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_serverIpTextFieldActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -243,18 +274,21 @@ public class Client extends javax.swing.JFrame implements Runnable {
     private javax.swing.JButton buttonClearConversation;
     private javax.swing.JButton buttonClearMessage;
     private javax.swing.JButton buttonSend;
-    private javax.swing.JTextField ipTextField;
+    private javax.swing.JTextField destinationIpTextField;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTextField messageTextField;
     private javax.swing.JTextArea messagesTextArea;
     private javax.swing.JTextField nickTextField;
     private javax.swing.JTextField portTextField;
+    private javax.swing.JTextField serverIpTextField;
     // End of variables declaration//GEN-END:variables
 
-    
-
+    public static void main(String[] args) throws UnknownHostException {
+        new Client();
+    }
     
 }

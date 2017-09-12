@@ -17,9 +17,11 @@ public class MainClass {
     /**
      * @param args the command line arguments
      */
+    /*
     public static void main(String[] args) throws UnknownHostException {
        Client client1 = new Client(), client2 = new Client((short)6967);
        Server server = new Server();
     }
+*/
     
 }
