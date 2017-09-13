@@ -40,22 +40,23 @@ public class Server extends javax.swing.JFrame implements Runnable {
         try {
             serverSocket = new ServerSocket(SERVER_PORT);
             while(true) {
-                inputSocket = serverSocket.accept();
-                ois = new ObjectInputStream(inputSocket.getInputStream());
-                message = (Message)ois.readObject();
-                messagesTextArea.append("FROM: " + message.getOriginIp() + " TO: " + message.getDestinationIp() + ":" + message.getPort() + " NICK: " +message.getNick() + " MESSAGETEXT: " + message.getText() + "\n");
-                outputSocket = new Socket(message.getDestinationIp(), message.getPort());
-                oos = new ObjectOutputStream(outputSocket.getOutputStream());
-                oos.writeObject(message);
-                
+                try {
+                    inputSocket = serverSocket.accept();
+                    ois = new ObjectInputStream(inputSocket.getInputStream());
+                    message = (Message)ois.readObject();
+                    messagesTextArea.append("FROM: " + message.getOriginIp() + " TO: " + message.getDestinationIp() + ":" + message.getPort() + " NICK: " +message.getNick() + " MESSAGETEXT: " + message.getText() + "\n");
+                    outputSocket = new Socket(message.getDestinationIp(), message.getPort());
+                    oos = new ObjectOutputStream(outputSocket.getOutputStream());
+                    oos.writeObject(message);
+                } catch (ClassNotFoundException ex) {
+                    ex.printStackTrace();
+                    messagesTextArea.append(ex.getMessage() + "\n");
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    messagesTextArea.append(ex.getMessage() + "\n");
+                } 
             }
         } catch (IOException ex) {
-            ex.printStackTrace();
-            messagesTextArea.append(ex.getMessage() + "\n");
-        } catch (ClassNotFoundException ex) {
-            ex.printStackTrace();
-            messagesTextArea.append(ex.getMessage() + "\n");
-        } catch (Exception ex) {
             ex.printStackTrace();
             messagesTextArea.append(ex.getMessage() + "\n");
         }
